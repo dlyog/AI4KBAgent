@@ -1,0 +1,14 @@
+{
+    "users": [
+        {
+            "username": "contentdev",
+            "password": "$2b$12$4gho4RtouQakNzl7UuC4jeJiBn4N0bQRdbQKLaKCnHZYhDU3wtmce",
+            "role": "Content Developer"
+        },
+        {
+            "username": "regularuser",
+            "password": "$2b$12$c.m4rCf0nabA5NjV3LH9se82zmu8GODzcd0k36HiGjaq.qWvjdw6W",
+            "role": "Regular User"
+        }
+    ]
+}

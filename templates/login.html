@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en" class="flex flex-col min-h-screen">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - KB CoPilot</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.0.1/dist/tailwind.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.10.4/gsap.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            background-image: url('/static/images/login_bg.png');
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: center;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 flex items-center justify-center min-h-screen">
+    <div class="bg-gray-800 bg-opacity-75 p-8 rounded-lg shadow-lg max-w-md w-full transform translate-y-20">
+        <h2 class="text-2xl font-bold text-center text-white mb-4">Login</h2>
+        <form id="login-form" action="/login" method="post">
+            <div class="mb-4">
+                <label for="username" class="block text-sm font-medium text-gray-300">Username:</label>
+                <input type="text" id="username" name="username" class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-white" required>
+            </div>
+            <div class="mb-4">
+                <label for="password" class="block text-sm font-medium text-gray-300">Password:</label>
+                <input type="password" id="password" name="password" class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-white" required>
+            </div>
+            <div id="login-button" class="mt-4 bg-blue-500 text-white text-center py-2 rounded-md cursor-pointer hover:bg-blue-600">
+                Login
+            </div>
+        </form>
+        {% if error %}
+        <p class="text-red-500 text-center mt-4">{{ error }}</p>
+        {% endif %}
+        <footer class="text-center text-gray-300 mt-6">
+            AI4KBAgent&trade; CoPilot Powered by GenAI
+        </footer>
+        <footer class="text-center text-gray-300 mt-6">
+            <a href="/terms" target="_blank" class="text-blue-500 underline">Terms and Conditions</a> and <a href="/privacy" target="_blank" class="text-blue-500 underline">Privacy Policy</a>
+        </footer>
+        <footer class="text-center text-gray-400 text-sm mt-2">
+            © 2024 Tarun Chawdhury. All rights reserved.
+        </footer>
+    </div>
+
+    <!-- Popup for Terms and Conditions and Privacy Policy -->
+    <div class="popup fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50" id="terms-popup">
+        <div class="bg-white p-6 rounded-lg text-center max-w-lg w-full">
+            <h2 class="text-2xl font-bold mb-4">Microsoft Developers AI Learning Hackathon</h2>
+            <p class="text-gray-700 mb-4">This app is designed for participants in the Microsoft Developers AI Learning Hackathon. Learn to build your AI apps with Azure Cosmos DB. Access is restricted to authorized personnel only. Please do not share any Personally Identifiable Information (PII), Protected Health Information (PHI), or Payment Card Information (PCI) data. This app is provided 'as is' without any warranty and may be discontinued at any time. We are not responsible for any damages. All standard disclaimers apply. For more information, including rules and further details, please visit the <a href="https://azurecosmosdb.devpost.com/" target="_blank" class="text-blue-500 underline">hackathon page</a>. Please read and accept our <a href="/terms" target="_blank" class="text-blue-500 underline">Terms and Conditions</a> and <a href="/privacy" target="_blank" class="text-blue-500 underline">Privacy Policy</a>.</p>
+            <button id="accept-terms" class="bg-blue-500 text-white px-4 py-2 rounded-md">Accept</button>
+        </div>
+    </div>
+
+    <!-- Popup for authentication loading -->
+    <div class="popup fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 hidden" id="auth-popup">
+        <div class="bg-white p-6 rounded-lg text-center max-w-lg w-full">
+            <div class="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-24 w-24 mx-auto mb-4"></div>
+            <p class="text-gray-700">Please wait while we authenticate you...</p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('accept-terms').addEventListener('click', function() {
+            document.getElementById('terms-popup').style.display = 'none';
+        });
+
+        document.getElementById('login-button').addEventListener('click', function() {
+            document.getElementById('auth-popup').classList.remove('hidden');
+            $.ajax({
+                type: 'POST',
+                url: '/login',
+                data: $('#login-form').serialize(),
+                success: function(response) {
+
+                    document.getElementById('auth-popup').classList.add('hidden');
+
+                    // Assuming data.redirect contains the path or route name
+                    const baseUrl = window.location.origin; // Get the base URL of the current site
+                    const fullUrl = `${baseUrl}/${response}`; // Construct the full URL
+                    
+                    // Redirect to the constructed URL
+                    window.location.href = fullUrl;
+                    
+                    
+                },
+                error: function() {
+                    document.getElementById('auth-popup').classList.add('hidden');
+                    // Show error message if needed
+                }
+            });
+        });
+
+        gsap.from(".login-container", {duration: 1, opacity: 0, y: 30, ease: "power3.out"});
+    </script>
+
+    <style>
+        .loader {
+            border-top-color: #3498db;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</body>
+</html>
