@@ -1,0 +1,51 @@
+name: deploy_azure_container_instance
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, Linux, X64, kbcopilot]
+    steps:
+    - name: Log in to Azure CLI
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Log in to Azure Container Registry
+      run: |
+        az acr login --name dlyogacr
+
+    - name: Tag Docker Image
+      run: |
+        docker tag kbcopilot:latest dlyogacr.azurecr.io/kbcopilot:latest
+
+    - name: Push Docker Image to Azure Container Registry
+      run: |
+        docker push dlyogacr.azurecr.io/kbcopilot:latest
+
+    - name: Delete Existing Container Group
+      run: |
+        az container delete --resource-group MyResourceGroup --name kbcopilot --yes || true
+
+    - name: Deploy to Azure Container Instance
+      run: |
+        az container create --resource-group MyResourceGroup --name kbcopilot --image dlyogacr.azurecr.io/kbcopilot:latest --cpu 1 --memory 1 --dns-name-label dlyogkbagent --registry-login-server dlyogacr.azurecr.io --registry-username ${{ secrets.ACR_USERNAME }} --registry-password ${{ secrets.ACR_PASSWORD }} --ports 5011 6789 --environment-variables COSMOSDB_ENDPOINT=${{ secrets.COSMOSDB_ENDPOINT }} COSMOSDB_PRIMARY_KEY=${{ secrets.COSMOSDB_PRIMARY_KEY }} LLM_SERVER_URL=${{ secrets.LLM_SERVER_URL }} OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} --command-line "./run.sh"
+
+    - name: Check ACI Status
+      run: |
+        az container show --resource-group MyResourceGroup --name kbcopilot --query "{status:instanceView.state, fqdn:ipAddress.fqdn, restartCount:instanceView.restartCount}" --output table
+
+    - name: Get ACI FQDN and Construct URL
+      run: |
+        fqdn=$(az container show --resource-group MyResourceGroup --name kbcopilot --query ipAddress.fqdn --output tsv)
+        url="http://${fqdn}:5011"
+        echo "Your application is accessible at: $url"
+
+    - name: Get Container Logs
+      if: failure()
+      run: |
+        az container logs --resource-group MyResourceGroup --name kbcopilot || echo "No logs available"
+
+
+
